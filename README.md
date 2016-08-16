@@ -770,3 +770,430 @@ android:inputType="time"//时间键盘
 ```
 
 
+61.得到当前应用的版本号,版本名字
+```
+private int getVersionCode() throws Exception {  
+        // 获取packagemanager的实例  
+        PackageManager packageManager = getPackageManager();  
+        // getPackageName()是你当前类的包名，0代表是获取版本信息  
+        PackageInfo packInfo = packageManager.getPackageInfo(getPackageName(),  
+                0);  
+        return packInfo.versionCode;  
+    }  
+```
+
+62.获取手机内存大小
+```java
+ /**
+     * 获取系统总内存
+     *
+     * @param context 可传入应用程序上下文。
+     * @return 总内存大单位为M。
+     */
+    public static long getTotalMemorySize(Context context) {
+        String dir = "/proc/meminfo";
+        try {
+            FileReader fr = new FileReader(dir);
+            BufferedReader br = new BufferedReader(fr, 2048);
+            String memoryLine = br.readLine();
+            String subMemoryLine = memoryLine.substring(memoryLine.indexOf("MemTotal:"));
+            br.close();
+            return Long.parseLong(subMemoryLine.replaceAll("\\D+", "")) / 1024l;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+```
+
+
+63.Activity,Context,Application
+
+如果我们在Activity A中或者其他地方使用Foo.getInstance()时，我们总是会顺手写一个『this』或者『mContext』（这个变量也是指向this）。
+
+试想一下，当前我们所用的Foo是单例，意味着被初始化后会一直存在与内存中，以方便我们以后调用的时候不会在此次创建Foo对象。
+
+但Foo中的 『mContext』变量一直都会持有Activity A中的『Context』，导致Activity A即使执行了onDestroy方法，也不能够将自己销毁。
+
+但『applicationContext』就不同了，它一直伴随着我们应用存在（中途也可能 会被销毁，但也会自动reCreate），所以就不用担心Foo中的『mContext』会持有某Activity的引用，让其无法销毁。
+
+看使用的周期是否在activity周期内，如果超出，必须用application；常见的情景包括：AsyncTask，Thread，第三方库初始化等等。
+
+还有些情景，只能用activity：比如，对话框，各种View，需要startActivity的等。
+
+Activity.this 返回当前的Activity实例，如果是UI控件需要使用Activity作为Context对象，但是默认的Toast实际上使用ApplicationContext也可以。
+
+![Image](/_063.jpg)
+
+
+大家注意看到有一些NO上添加了一些数字，其实这些从能力上来说是YES，但是为什么说是NO呢？下面一个一个解释：
+
+数字1：启动Activity在这些类中是可以的，但是需要创建一个新的task。一般情况不推荐。
+
+数字2：在这些类中去layout inflate是合法的，但是会使用系统默认的主题样式，如果你自定义了某些样式可能不会被使用。
+
+数字3：在receiver为null时允许，在4.2或以上的版本中，用于获取黏性广播的当前值。（可以无视）
+
+注：ContentProvider、BroadcastReceiver之所以在上述表格中，是因为在其内部方法中都有一个context用于使用。
+
+好了，这里我们看下表格，重点看Activity和Application，可以看到，和UI相关的方法基本都不建议或者不可使用Application，并且，前三个操作基本不可能在Application中出现。
+
+实际上，只要把握住一点，凡是跟UI相关的，都应该使用 Activity做为Context来处理；
+
+其他的一些操作，Service,Activity,Application等实例都可以，当然了，注意 Context引用的持有，防止内存泄漏。
+
+64.回到桌面Home
+```java
+    private void goHome() {  
+        Intent i = new Intent(Intent.ACTION_MAIN);  
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
+        i.addCategory(Intent.CATEGORY_HOME);  
+        startActivity(i);  
+    }  
+```
+
+65.验证手机号码
+```java
+public static boolean phoneNumberIfRight(String phoneNumber) {  
+        if (phoneNumber != null) {  
+            if (phoneNumber.length() == 11) {  
+                for (int i = 0; i < phoneNumber.length(); i++) {  
+                    char c = phoneNumber.charAt(i);  
+                    if (!(c >= '0' && c <= '9')) {  
+                        return false;  
+                    }  
+                }  
+                return true;  
+            }  
+        }  
+        return false;  
+    }  
+```
+
+66.WebView Settins常用方法
+```java
+setJavaScriptEnabled(true) ;//支持js脚本  
+setPluginsEnabled(true) ;//支持插件  
+setUserWideViewPort(false) ;//将图片调整到适合webview的大小  
+setSupportZoom(true) ;//支持缩放  
+setLayoutAlgorithm(LayoutAlgrithm.SINGLE_COLUMN) ;//支持内容从新布局  
+supportMultipleWindows() ;//多窗口  
+setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK) ;//关闭webview中缓存  
+setAllowFileAccess(true) ;//设置可以访问文件  
+setNeedInitialFocus(true) ;//当webview调用requestFocus时为webview设置节点  
+setjavaScriptCanOpenWindowsAutomatically(true) ;//支持通过JS打开新窗口  
+setLoadsImagesAutomatically(true) ;//支持自动加载图片  
+setBuiltInZoomControls(true);  
+//支持缩放  
+webView.setInitialScale(35);  
+//设置缩放比例  
+webView.setScrollBarStyle(View.SCROLLBARS_OUTSIDE_OVERLAY);  
+//设置滚动条隐藏   
+webView.getSettings().setGeolocationEnabled(true);  
+//启用地理定位  
+webView.getSettings().setRenderPriority(RenderPriority.HIGH);  
+//设置渲染优先级  
+String dir = "/sdcard/temp";//设置定位的数据库路径   
+webView.getSettings().setGeolocationDatabasePath(dir);  
+```
+
+
+67.小数点精确到后两位
+```java
+private static String formatPrice(float price) {
+        String priceStr = price + "";
+        if (priceStr.length() > 0) {
+            int index = priceStr.indexOf(".");
+            if (index == -1) {//没有小数点
+                priceStr += ".00";
+            } else {//有小数点
+                if (priceStr.length() > index + 2 + 1) {//小数点大于两位(再加1因为index从0开始算)
+                    priceStr = priceStr.substring(0, index + 2 + 1);
+                } else if (priceStr.length() < index + 2 + 1) {//小数点小于两位
+                    for (int i = 0; i < index + 2 + 1 - priceStr.length(); i++) {
+                        priceStr += "0";
+                    }
+                }
+            }
+        }
+        return priceStr;
+    }
+```
+
+68.获取应用签名(MD5)
+```java
+/**
+     * 获取应用签名信息
+     *
+     * @param paramContext Context
+     * @param paramString  packget name
+     * @return
+     */
+    private String getRawSignature(Context paramContext, String paramString) {
+        if ((paramString == null) || (paramString.length() == 0)) {
+            return null;
+        }
+        PackageManager localPackageManager = paramContext.getPackageManager();
+        PackageInfo localPackageInfo;
+        try {
+            localPackageInfo = localPackageManager.getPackageInfo(paramString, 64);
+            if (localPackageInfo == null) {
+                return null;
+            }
+        } catch (PackageManager.NameNotFoundException localNameNotFoundException) {
+            return null;
+        }
+        Signature[] arrayOfSignature = localPackageInfo.signatures;
+        if (arrayOfSignature == null || arrayOfSignature.length == 0) return null;
+        String contentStr = "";
+        int i = arrayOfSignature.length;
+        for (int j = 0; j < i; j++)
+            contentStr += MD5.getMessageDigest(arrayOfSignature[j].toByteArray());
+        return contentStr;
+    }
+    ```
+
+其中MD5方法
+
+```java
+public static String getMessageDigest(byte[] paramArrayOfByte) {
+        char[] arrayOfChar1 = {48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 97, 98, 99, 100, 101, 102};
+        try {
+            MessageDigest localMessageDigest = MessageDigest.getInstance("MD5");
+            localMessageDigest.update(paramArrayOfByte);
+            byte[] arrayOfByte = localMessageDigest.digest();
+            int i = arrayOfByte.length;
+            char[] arrayOfChar2 = new char[i * 2];
+            int j = 0;
+            int k = 0;
+            while (true) {
+                if (j >= i) return new String(arrayOfChar2);
+                int m = arrayOfByte[j];
+                int n = k + 1;
+                arrayOfChar2[k] = arrayOfChar1[(0xF & m >>> 4)];
+                k = n + 1;
+                arrayOfChar2[n] = arrayOfChar1[(m & 0xF)];
+                j++;
+            }
+        } catch (Exception localException) {
+        }
+        return null;
+    }
+    ```
+
+69.设置屏幕长亮
+```java
+///常亮  
+view.setKeepScreenOn(true)  
+  getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:keepScreenOn="true">
+    ...
+</RelativeLayout>
+getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)//清除屏幕长亮标志
+CPU长期工作
+<uses-permission android:name="android.permission.WAKE_LOCK" />
+PowerManager powerManager = (PowerManager) getSystemService(POWER_SERVICE);
+Wakelock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
+        "MyWakelockTag");
+wakeLock.acquire();
+To release the wake lock, call wakelock.release().
+为了保证后台任务能够顺利的进行.还必须请求CPU长期的工作
+<receiver android:name=".MyWakefulReceiver"></receiver>
+public class MyWakefulReceiver extends WakefulBroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        // Start the service, keeping the device awake while the service is
+        // launching. This is the Intent to deliver to the service.
+        Intent service = new Intent(context, MyIntentService.class);
+        startWakefulService(context, service);
+    }
+}
+public class MyIntentService extends IntentService {
+    public static final int NOTIFICATION_ID = 1;
+    private NotificationManager mNotificationManager;
+    NotificationCompat.Builder builder;
+    public MyIntentService() {
+        super("MyIntentService");
+    }
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        Bundle extras = intent.getExtras();
+        // Do the work that requires your app to keep the CPU running.
+        // ...
+        // Release the wake lock provided by the WakefulBroadcastReceiver.
+        MyWakefulReceiver.completeWakefulIntent(intent);
+    }
+}
+```
+
+
+70.设置滚动条的样式
+```xml
+android:scrollbarTrackVertical="@drawable/aaa"  
+android:scrollbarThumbVertical="@drawable/bbb"  
+android:scrollbarTrackVertical设置滚动条短的style  
+android:scrollbarThumbVertical设置滚动条长的style
+```
+
+aaa和bbb放图片和xml都可以，可以在xml里结合shap设置样式 
+
+```xml
+<style name="scroll">  
+       <item name="android:scrollbarThumbVertical">@drawable/seek_bar_thumb</item>  
+       <item name="android:scrollbarTrackVertical">@drawable/scroll</item>  
+       <item name="android:scrollbarThumbHorizontal">@drawable/scrollbar_handle</item>  
+       <item name="android:scrollbarTrackHorizontal">@drawable/scrollbar_track</item>  
+       <item name="android:scrollbarFadeDuration">0</item>  
+       <item name="android:scrollbarAlwaysDrawVerticalTrack">true</item>  
+  
+   </style>  
+```
+
+71.获得状态栏高度
+  
+闲暇写了个单本小说阅读的应用。中间碰到了需要获取状态栏高度的问题。  
+  
+就像android后期版本，无法直接退出一样。找了一些方法来获取状态栏高度，结果都是为0.  
+  
+还好，牛人是很多的，当时，找到一段代码，能够有效的获取状态栏的高度。特此记录，备忘，以及供大家参考。  
+
+```java  
+Class<?> c = null;  
+Object obj = null;  
+Field field = null;  
+int x = 0, sbar = 0;  
+try {  
+    c = Class.forName("com.android.internal.R$dimen");  
+    obj = c.newInstance();  
+    field = c.getField("status_bar_height");  
+    x = Integer.parseInt(field.get(obj).toString());  
+    sbar = getResources().getDimensionPixelSize(x);  
+} catch(Exception e1) {  
+    loge("get status bar height fail");  
+    e1.printStackTrace();  
+}
+```
+
+
+
+72.AndroidMainFest.xml中输入法适配
+```xml
+android:screenOrientation="landscape"是限制此页面横屏显示，  
+  
+android:screenOrientation="portrait"是限制此页面数竖屏显示。
+
+如果没有设置,则横竖屏都可以,这个时候的Activity会被重新执行,需要添加这一行代码阻止执行
+
+AndroidManifest.xml中设置android:configChanges="orientation|screenSize“
+键盘输入问题,当我们不需要输入法的时候,希望它可以自动隐藏
+
+ android:windowSoftInputMode="stateHidden"
+
+ android:windowSoftInputMode="stateHidden|adjustPan"可以把输入框推到上面
+```
+
+
+73.得到控件的绝对位置
+
+控件的绝对位置必须在控件绘制完毕后获得,可以使用ViewTreeHolder来监听
+
+然后时候方法mOptions2.getGlobalVisibleRect(rect);来获得控件在屏幕了的绝对位置
+
+
+74,Android debug.keystore 密码
+```java
+打开keySotre密码:android
+key alias:androiddebugkey
+key password:android
+```
+
+75.EditText把光标定位到末尾
+```java
+mEditName.setSelection(mEditName.getEditableText().toString().length());// 将光标移至文字末尾  
+```
+
+
+76.代码设置TextView的drawabletoleft
+```java
+Drawable d = getResources().getDrawable(R.drawable.q_shaixuan2);// 找图片  
+            d.setBounds(0, 0, d.getMinimumWidth(), d.getMinimumHeight());  
+            pb_screening.setCompoundDrawables(d, null, null, null);  
+```
+
+77.取消正在播放的动画
+```java
+view.clearAnimation();
+```
+
+
+78.// 判断是否是应用界面
+```java
+public static boolean isApplicationFirst(final Context context){  
+          
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);  
+        List<RunningTaskInfo> tasks = am.getRunningTasks(1);  
+        if (!tasks.isEmpty()) {  
+            ComponentName topActivity = tasks.get(0).topActivity;  
+            if (topActivity.getPackageName().equals(context.getPackageName())) {  
+                return true;  
+            }  
+        }  
+          
+        return false;  
+    }   
+```
+
+79.判断应用是否切换到了后台
+```
+/** 
+     * 程序是否在前台运行 
+     *  
+     * @return 
+     */  
+    public boolean isAppOnForeground() {  
+        // Returns a list of application processes that are running on the  
+        // device  
+  
+        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);  
+        String packageName = getApplicationContext().getPackageName();  
+  
+        List<RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();  
+        if (appProcesses == null)  
+            return false;  
+  
+        for (RunningAppProcessInfo appProcess : appProcesses) {  
+            // The name of the process that this object is associated with.  
+            if (appProcess.processName.equals(packageName) && appProcess.importance == RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {  
+                return true;  
+            }  
+        }  
+        return false;  
+    }  
+ ```
+
+80.判断数据表是否存在(用于同一个数据库添加第二张表)
+```java
+public boolean tabIsExist(SQLiteDatabase database, String tabName) {
+		boolean result = false;
+		if (tabName == null) {
+			return false;
+		}
+		Cursor cursor = null;
+		try {
+			String sql = "select count(*) as c from sqlite_master where type ='table' and name ='"
+					+ tabName.trim() + "' ";
+			cursor = database.rawQuery(sql, null);
+			if (cursor.moveToNext()) {
+				int count = cursor.getInt(0);
+				if (count > 0) {
+					result = true;
+				}
+			}
+		} catch (Exception e) {
+		}
+		return result;
+	}
+```
