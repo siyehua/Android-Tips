@@ -245,8 +245,7 @@ File[] files= new File("文件路径").listFiles(new FileFilter() {
               
             @Override  
             public boolean accept(File pathname) {  
-                // TODO Auto-generated method stub  
-                return false;  
+                return false;
             }  
         });  
 ```
@@ -1196,4 +1195,1160 @@ public boolean tabIsExist(SQLiteDatabase database, String tabName) {
 		}
 		return result;
 	}
+```
+
+81.最近应用
+
+在AndroidManiFest.xml里面的 Activity的参数中加上一句：android:excludeFromRecents="true"
+
+这样程序就不会在系统长按HOME键出现的最近打开的应用列表里面了，同时也就不会被关闭最近打开的应用这个可恶的系统功能给关闭了！
+
+82.得到控件的的宽度或者高度
+```java
+ ViewTreeObserver observer = linearLayout.getViewTreeObserver();
+        observer.addOnPreDrawListener(new OnPreDrawListener() {
+
+            @Override
+            public boolean onPreDraw() {
+                if(linearLayout.height() > height){
+                  height = linearLayout.height();
+                }
+                return true;
+            }
+        });
+```
+
+83.多次点击有多个Toast时
+```java
+package com.xmn.util.other;
+import android.content.Context;
+import android.widget.Toast;
+/**
+ * 要用的时候调用ToastHelper.showToast(context, msg, duration);
+ *
+ * 完美实现Toast快速切换
+ *
+ * @author li'si
+ *
+ * **/
+public class ToastHelper {
+	private static Toast mToast;
+	public static void showToast(Context context, String msg, int duration) {
+		if (mToast == null) {
+			mToast = Toast.makeText(context, msg, duration);
+		} else {
+			mToast.setText(msg);
+		}
+		mToast.show();
+	}
+}
+```
+
+84.手机分辨率,密度
+
+在一个Activity的onCreate方法中，编写以下代码：
+```java
+      DisplayMetrics metric = new DisplayMetrics();
+      getWindowManager().getDefaultDisplay().getMetrics(metric);
+      int width = metric.widthPixels;  // 宽度（PX）
+      int height = metric.heightPixels;  // 高度（PX）
+      float density = metric.density;  // 密度（0.75 / 1.0 / 1.5）
+      int densityDpi = metric.densityDpi;  // 密度DPI（120 / 160 / 240）
+```
+   需要注意的是，在一个低密度的小屏手机上，仅靠上面的代码是不能获取正确的尺寸的。
+
+   比如说，一部240x320像素的低密度手机，如果运行上述代码，获取到的屏幕尺寸是320x427。
+
+   因此，研究之后发现，若没有设定多分辨率支持的话，
+
+   Android系统会将240x320的低密度（120）尺寸转换为中等密度（160）对应的尺寸，
+
+   这样的话就大大影响了程序的编码。
+
+   所以，需要在工程的AndroidManifest.xml文件中，加入supports-screens节点,如下：
+   ```xml
+        <supports-screens
+            android:smallScreens="true"
+            android:normalScreens="true"
+            android:largeScreens="true"
+            android:resizeable="true"
+            android:anyDensity="true" />
+   ```
+   这样当前的Android程序就支持了多种分辨率，那么就可以得到正确的物理尺寸了。
+
+85.TextView字体大小
+
+使用如下代码时，发现字号不会变大，反而会变小：
+```java
+size = (int) mText.getTextSize() + 1;
+mText.setTextSize(size);
+```
+后来发现getTextSize返回值是以像素(px)为单位的，而setTextSize()是以sp为单位的，两者单位不一致才造成这样的结果。
+
+这里可以用setTextSize()的另外一种形式，可以指定单位：
+```java
+setTextSize(int unit, int size)
+TypedValue.COMPLEX_UNIT_PX : Pixels
+TypedValue.COMPLEX_UNIT_SP : Scaled Pixels
+TypedValue.COMPLEX_UNIT_DIP : Device Independent Pixels
+```
+下面这样就正常了：
+```java
+size = (int) mText.getTextSize() + 1;
+mText.setTextSize(TypedValue.COMPLEX_UNIT_PX, size);
+```
+
+86.应用图标大小
+
+应用程序图标 （Icon）应当是一个 Alpha 通道透明的32位 PNG 图片。
+
+由于安卓设备众多，一个应用程序图标需要设计几种不同大小，如：
+
+LDPI (Low Density Screen，120 DPI)，其图标大小为 36 x 36 px。
+
+MDPI (Medium Density Screen, 160 DPI)，其图标大小为 48 x 48 px。
+
+HDPI (High Density Screen, 240 DPI)，其图标大小为 72 x 72 px。
+
+xhdpi (Extra-high density screen, 320 DPI)，其图标大小为 96 x 96 px。
+
+建议在设计过程中，在四周空出几个像素点使得设计的图标与其他图标在视觉上一致，例如，
+
+96 x 96 px 图标可以画图区域大小可以设为 88 x 88 px， 四周留出4个像素用于填充（无底色）。
+
+72 x 72 px 图标可以画图区域大小可以设为 68 x 68 px， 四周留出2个像素用于填充（无底色）。
+
+48 x 48 px 图标可以画图区域大小可以设为 46 x 46 px， 四周留出1个像素用于填充（无底色）。
+
+36 x 36 px 图标可以画图区域大小可以设为 34 x 34 px， 四周留出1个像素用于填充（无底色）。
+
+
+87.TextView下划线效果
+
+如果是在资源文件里：
+```xml
+ <resources>
+    <string name="hello"><u>phone:0123456</u></string>
+    <string name="app_name">MyLink</string>
+</resources>
+```
+如果是代码里：
+```java
+TextView textView = (TextView)findViewById(R.id.tv_test);
+textView.setText(Html.fromHtml("<u>"+"0123456"+"</u>"));
+```
+代码也可以这样：
+```java
+tvTest.getPaint().setFlags(Paint. UNDERLINE_TEXT_FLAG ); //下划线
+tvTest.getPaint().setAntiAlias(true);//抗锯齿
+```
+
+
+88.Activity恢复现场
+
+注意,如果在onCreate()方法中得到Bunble值,需要判断它是否为空.因为第一次启动的时候onCreate()的Bunble为空.
+
+
+89.检测Intent,查看当前手机是否有应用可以接受发送的Intent
+```java
+PackageManager packageManager = getPackageManager();
+List<ResolveInfo> activities = packageManager.queryIntentActivities(intent, 0);
+boolean isIntentSafe = activities.size() > 0;
+```
+
+90.显示分享列表(尽管用户已经选择了默认的列表)
+```java
+Intent intent = new Intent(Intent.ACTION_SEND);
+...
+// Always use string resources for UI text.
+// This says something like "Share this photo with"
+String title = getResources().getString(R.string.chooser_title);
+// Create intent to show chooser
+Intent chooser = Intent.createChooser(intent, title);
+// Verify the intent will resolve to at least one activity
+if (intent.resolveActivity(getPackageManager()) != null) {
+    startActivity(chooser);
+}
+```
+
+
+91.接受其他应用传过来的Intent设置
+```xml
+<activity android:name="ShareActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.SEND"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+        <data android:mimeType="text/plain"/>
+        <data android:mimeType="image/*"/>
+    </intent-filter>
+</activity>
+```
+
+92.监听EdtiText输入
+```
+edtCorMolnum.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
+			}
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
+			}
+			@Override
+			public void afterTextChanged(Editable s) {
+				if (s.toString().length() == 11) {// 输入了11位数字
+					if (phoneNumberIfRight(edtCorMolnum.getEditableText()
+							.toString().trim()))
+						phoneNumberIfRepeat(edtCorMolnum.getEditableText()
+								.toString().trim());// 检查手机号码是否可用
+					else
+						LogUitls.print("手机号码不正确",
+								phoneNumberIfRight(edtCorMolnum
+										.getEditableText().toString().trim()));
+				}
+			}
+		});
+```
+
+93.总是显示分享列表
+```java
+Intent sendIntent = new Intent();
+sendIntent.setAction(Intent.ACTION_SEND);
+sendIntent.putExtra(Intent.EXTRA_TEXT, "This is my text to send.");
+sendIntent.setType("text/plain");
+startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.send_to)));
+```
+
+94.Intent分享多条数据
+```java
+ArrayList<Uri> imageUris = newArrayList<Uri>();
+imageUris.add(imageUri1); // Add your image URIs here
+imageUris.add(imageUri2);
+Intent shareIntent = newIntent();
+shareIntent.setAction(Intent.ACTION_SEND_MULTIPLE);
+shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, imageUris);
+shareIntent.setType("image/*");
+startActivity(Intent.createChooser(shareIntent, "Share images to.."));
+```
+
+95.得到数据库所有的表
+```java
+Cursor cursor = db.rawQuery("select name from sqlite_master where type='table' order by name", null);
+  while(cursor.moveToNext()){
+   //遍历出表名
+   String name = cursor.getString(0);
+   Log.i("System.out", name);
+  }
+```
+
+96.监听音量键,媒体键盘,监听多媒体键
+    * 注册广播
+    ```xml
+<receiver android:name=".RemoteControlReceiver">
+    <intent-filter>
+        <action android:name="android.intent.action.MEDIA_BUTTON" />
+    </intent-filter>
+</receiver>
+```
+
+    * 在广播中监听
+
+    ```java
+public class RemoteControlReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_MEDIA_BUTTON.equals(intent.getAction())) {
+            KeyEvent event = (KeyEvent)intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            if (KeyEvent.KEYCODE_MEDIA_PLAY == event.getKeyCode()) {
+                // Handle key press.
+            }
+        }
+    }
+}
+//KeyEvent包括许多类型的按键,例如such as KEYCODE_MEDIA_PLAY_PAUSE and KEYCODE_MEDIA_NEXT.
+
+监听音量键
+AudioManager am = mContext.getSystemService(Context.AUDIO_SERVICE);
+...
+// Start listening for button presses
+am.registerMediaButtonEventReceiver(RemoteControlReceiver);
+...
+// Stop listening for button presses
+am.unregisterMediaButtonEventReceiver(RemoteControlReceiver);
+注意取消注册广播最好是监听Audio Foucs,如果App失去了Audio Foucs,则就取消注册广播
+```
+
+97.得到声音焦点
+
+    * 请求一段持久性的声音
+```java
+AudioManager am = mContext.getSystemService(Context.AUDIO_SERVICE);
+...
+// Request audio focus for playback
+int result = am.requestAudioFocus(afChangeListener,
+                                 // Use the music stream.
+                                 AudioManager.STREAM_MUSIC,
+                                 // Request permanent focus.
+                                 AudioManager.AUDIOFOCUS_GAIN);//第二个参数表示请求一个持久性的Foucs
+
+if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {//如果请求成功,就注册声音监听广播
+    am.registerMediaButtonEventReceiver(RemoteControlReceiver);
+    // Start playback.
+}
+```
+    * 请求一段短暂的声音
+    ```java
+// Request audio focus for playback
+int result = am.requestAudioFocus(afChangeListener,
+                             // Use the music stream.
+                             AudioManager.STREAM_MUSIC,
+                             // Request permanent focus.
+                             AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+
+if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+    // Start playback.
+}
+//如果音乐切换到后来,需要告诉系统,这个时候允许任何APP打断你的播放
+
+// Abandon audio focus when playback complete
+am.abandonAudioFocus(afChangeListener);
+```
+
+98.监听声音焦点的变化
+```java
+OnAudioFocusChangeListener afChangeListener = new OnAudioFocusChangeListener() {
+    public void onAudioFocusChange(int focusChange) {
+        if (focusChange == AUDIOFOCUS_LOSS_TRANSIENT
+            // Pause playback
+        } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {
+            // Resume playback
+        } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+            am.unregisterMediaButtonEventReceiver(RemoteControlReceiver);
+            am.abandonAudioFocus(afChangeListener);
+            // Stop playback
+        }else if(focusChange == AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK){
+            // Lower the volume
+        }
+    }
+};
+```
+
+99.监听耳机是否拔出,蓝牙,可穿戴设备是否断开连接
+```java
+private class NoisyAudioStreamReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intent.getAction())) {
+            // Pause the playback
+        }
+    }
+}
+private IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+private void startPlayback() {
+    registerReceiver(myNoisyAudioStreamReceiver(), intentFilter);
+}
+private void stopPlayback() {
+    unregisterReceiver(myNoisyAudioStreamReceiver);
+}
+```
+
+100.拍照
+```java
+//检测相机是否可用hasSystemFeature(PackageManager.FEATURE_CAMERA).
+```
+```xml
+<manifest ... >
+    <uses-feature android:name="android.hardware.camera"
+                  android:required="true" />
+    ...
+</manifest>
+```
+拍照
+```java
+String mCurrentPhotoPath;
+private File createImageFile() throws IOException {
+    // Create an image file name
+    String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+    String imageFileName = "JPEG_" + timeStamp + "_";
+    File storageDir = Environment.getExternalStoragePublicDirectory(
+            Environment.DIRECTORY_PICTURES);
+    File image = File.createTempFile(
+        imageFileName,  /* prefix */
+        ".jpg",         /* suffix */
+        storageDir      /* directory */
+    );
+    // Save a file: path for use with ACTION_VIEW intents
+    mCurrentPhotoPath = "file:" + image.getAbsolutePath();
+    return image;
+}
+static final int REQUEST_TAKE_PHOTO = 1;
+private void dispatchTakePictureIntent() {
+    Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    // Ensure that there's a camera activity to handle the intent
+    if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+        // Create the File where the photo should go
+        File photoFile = null;
+        try {
+            photoFile = createImageFile();
+        } catch (IOException ex) {
+            // Error occurred while creating the File
+            ...
+        }
+        // Continue only if the File was successfully created
+        if (photoFile != null) {
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT,
+                    Uri.fromFile(photoFile));
+            startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+        }
+    }
+}
+```
+刷新图片的Uri
+```java
+private void galleryAddPic() {
+    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+    File f = new File(mCurrentPhotoPath);
+    Uri contentUri = Uri.fromFile(f);
+    mediaScanIntent.setData(contentUri);
+    this.sendBroadcast(mediaScanIntent);
+}
+```
+
+101.录像
+
+    * 请求权限
+
+```xml
+<manifest ... >
+    <uses-feature android:name="android.hardware.camera"
+                  android:required="true" />
+    ...
+</manifest>
+```
+    * 检测相机是否可用
+    ```java
+ hasSystemFeature(PackageManager.FEATURE_CAMERA)
+ ```
+
+    * 启动相机
+    ```java
+static final int REQUEST_VIDEO_CAPTURE = 1;
+private void dispatchTakeVideoIntent() {
+    Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+    if (takeVideoIntent.resolveActivity(getPackageManager()) != null) {
+        startActivityForResult(takeVideoIntent, REQUEST_VIDEO_CAPTURE);
+    }
+}
+```
+    * 得到录像的Uri
+    ```java
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    if (requestCode == REQUEST_VIDEO_CAPTURE && resultCode == RESULT_OK) {
+        Uri videoUri = intent.getData();
+        mVideoView.setVideoURI(videoUri);
+    }
+}
+```
+
+102.操作相机
+```java
+private boolean safeCameraOpen(int id) {
+    boolean qOpened = false;
+
+    try {
+        releaseCameraAndPreview();
+        mCamera = Camera.open(id);
+        qOpened = (mCamera != null);
+    } catch (Exception e) {
+        Log.e(getString(R.string.app_name), "failed to open Camera");
+        e.printStackTrace();
+    }
+    return qOpened;
+}
+private void releaseCameraAndPreview() {
+    mPreview.setCamera(null);
+    if (mCamera != null) {
+        mCamera.release();
+        mCamera = null;
+    }
+}
+class Preview extends ViewGroup implements SurfaceHolder.Callback {
+    SurfaceView mSurfaceView;
+    SurfaceHolder mHolder;
+    Preview(Context context) {
+        super(context);
+        mSurfaceView = new SurfaceView(context);
+        addView(mSurfaceView);
+        // Install a SurfaceHolder.Callback so we get notified when the
+        // underlying surface is created and destroyed.
+        mHolder = mSurfaceView.getHolder();
+        mHolder.addCallback(this);
+        mHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
+...
+}
+```
+
+103.查看缓存是否需要更新
+```java
+long currentTime = System.currentTimeMillis());
+HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+long expires = conn.getHeaderFieldDate("Expires", currentTime);
+long lastModified = conn.getHeaderFieldDate("Last-Modified", currentTime);
+setDataExpirationDate(expires);
+if (lastModified < lastUpdateTime) {
+  // Skip update
+} else {
+  // Parse update
+}
+```
+
+104.android:scrollbarStyle属性
+```java
+android:scrollbarStyle可以定义滚动条的样式和位置，可选值有insideOverlay、insideInset、outsideOverlay、outsideInset四种。
+其中inside和outside分别表示是否在view的padding区域内，overlay和inset表示覆盖在view上或是插在view后面，所以四种值分别表示：
+insideOverlay：默认值，表示在padding区域内并且覆盖在view上
+insideInset：表示在padding区域内并且插入在view后面
+outsideOverlay：表示在padding区域外并且覆盖在view上，推荐这个
+outsideInset：表示在padding区域外并且插入在view后面
+```
+
+105.刷新View
+```java
+public void setShowText(boolean showText) {
+   mShowText = showText;
+   invalidate();
+   requestLayout();
+}
+```
+
+106.淡化状态栏与系统导航栏
+```java
+findViewById(R.id.content).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (flag) {
+                    flag = false;
+                    getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE);
+                } else {
+                    flag = true;
+                    getWindow().getDecorView().setSystemUiVisibility(0);
+                }
+            }
+        });
+```
+
+108.EditText
+```java
+ android:inputType 可设置输入类型
+android:inputType=
+        "textCapSentences|textAutoCorrect" 设置这个属性可自动提醒和完成
+android:imeOptions 可设置输入框的确定按钮"actionSend" or "actionSearch"
+EditText editText = (EditText) findViewById(R.id.search);
+editText.setOnEditorActionListener(new OnEditorActionListener() {
+    @Override
+    public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+        boolean handled = false;
+        if (actionId == EditorInfo.IME_ACTION_SEND) {
+            sendMessage();
+            handled = true;
+        }
+        return handled;
+    }
+});
+```
+
+109.显示输入法
+```java
+public void showSoftKeyboard(View view) {
+    if (view.requestFocus()) {
+        InputMethodManager imm = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
+    }
+}
+```
+
+120.闹钟例子
+
+Wake up the device to fire the alarm in 30 minutes, and every 30 minutes after that:
+
+// Hopefully your alarm will have a lower frequency than this!
+```java
+alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+        AlarmManager.INTERVAL_HALF_HOUR,
+        AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
+Wake up the device to fire a one-time (non-repeating) alarm in one minute:
+
+private AlarmManager alarmMgr;
+private PendingIntent alarmIntent;
+...
+alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+Intent intent = new Intent(context, AlarmReceiver.class);
+alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+alarmMgr.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+        SystemClock.elapsedRealtime() +
+        60 * 1000, alarmIntent);
+RTC examples
+
+Here are some examples of using RTC_WAKEUP.
+
+Wake up the device to fire the alarm at approximately 2:00 p.m., and repeat once a day at the same time:
+
+// Set the alarm to start at approximately 2:00 p.m.
+Calendar calendar = Calendar.getInstance();
+calendar.setTimeInMillis(System.currentTimeMillis());
+calendar.set(Calendar.HOUR_OF_DAY, 14);
+
+// With setInexactRepeating(), you have to use one of the AlarmManager interval
+// constants--in this case, AlarmManager.INTERVAL_DAY.
+alarmMgr.setInexactRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+        AlarmManager.INTERVAL_DAY, alarmIntent);
+Wake up the device to fire the alarm at precisely 8:30 a.m., and every 20 minutes thereafter:
+
+private AlarmManager alarmMgr;
+private PendingIntent alarmIntent;
+...
+alarmMgr = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+Intent intent = new Intent(context, AlarmReceiver.class);
+alarmIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
+
+// Set the alarm to start at 8:30 a.m.
+Calendar calendar = Calendar.getInstance();
+calendar.setTimeInMillis(System.currentTimeMillis());
+calendar.set(Calendar.HOUR_OF_DAY, 8);
+calendar.set(Calendar.MINUTE, 30);
+
+// setRepeating() lets you specify a precise custom interval--in this case,
+// 20 minutes.
+alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(),
+        1000 * 60 * 20, alarmIntent);
+开启启动闹钟
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+public class SampleBootReceiver extends BroadcastReceiver {
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (intent.getAction().equals("android.intent.action.BOOT_COMPLETED")) {
+            // Set the alarm here.
+        }
+    }
+}
+<receiver android:name=".SampleBootReceiver"
+        android:enabled="false">
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+    </intent-filter>
+</receiver>
+变成设置开机启动
+ComponentName receiver = new ComponentName(context, SampleBootReceiver.class);
+PackageManager pm = context.getPackageManager();
+pm.setComponentEnabledSetting(receiver,
+        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+        PackageManager.DONT_KILL_APP);
+取消开机启动
+ComponentName receiver = new ComponentName(context, SampleBootReceiver.class);
+PackageManager pm = context.getPackageManager();
+pm.setComponentEnabledSetting(receiver,
+        PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+        PackageManager.DONT_KILL_APP);
+```
+
+
+121.新建一个新的进程
+```xml
+<service android:name=".PlaybackService"
+         android:process=":background" />
+```
+
+122.为App申请更大的内存
+
+manifest的application标签下添加largeHeap=true的属性
+
+利用Android Framework里面优化过的容器类，例如SparseArray, SparseBooleanArray, 与 LongSparseArray。
+
+用来代替HashMap等
+
+
+123.颜色值转换
+开发中 将 十六进制 颜色代码 转换为  int   类型数值 方法  :
+```java
+ Color.parseColor("#00CCFF") 返回 int 数值 ;
+```
+
+124.JSON遍历所有的key
+```java
+Iterator a = listJsonObject.keys();//得到所有的key
+								while (a.hasNext()) {
+									LogUitls.print("siyehua-关注key", a.next()
+											.toString());
+								}
+```
+
+125.播放简单的声音,播放游戏声音
+```java
+private SoundPool soundPool;
+if (soundPool == null)// 参数详解(允许同时播放的声音的最大数量,音频类型:默认AudioManager.STREAM_MUSIC,采样率:即播放质量,0为默认)
+	soundPool = new SoundPool(20, AudioManager.STREAM_MUSIC, 0);
+final int a = soundPool.load(MainActivity.this,R.raw.goalsound, 1);
+soundPool.setOnLoadCompleteListener(new OnLoadCompleteListener() {
+	@Override
+	public void onLoadComplete(SoundPool soundPool,int sampleId, int status) {
+		playSound(a, 0);// 参数详解(上下问对象,需要播放的音频的ID,优先级:当前没有用到,默认1)return:一个ID,这个id可以用于播放/停止对应的音频
+	}
+});
+/**
+	 * @方法名: playSound
+	 * @功能描述: 播放声音
+	 * @param sound
+	 *            需要播放的声音源:ID,这个ID由load方法返回得到
+	 * @param loop
+	 *            重复次数
+	 * @return void
+	 * @throws
+	 */
+	public void playSound(int sound, int loop) {
+		AudioManager mgr = (AudioManager) this
+				.getSystemService(Context.AUDIO_SERVICE);
+		float streamVolumeCurrent = mgr
+				.getStreamVolume(AudioManager.STREAM_MUSIC);
+		float streamVolumeMax = mgr
+				.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		float volume = streamVolumeCurrent / streamVolumeMax;
+		soundPool.play(sound, 1.0f, 1.0f, 1, loop, 1.0f);
+		// 参数：1、Map中取值 2、左声道 3、右声道 4、优先级:默认为1 5、重播次数 6、播放速度
+	}
+```
+
+126.把字符串复制到剪切板
+```java
+private void copyToClipBoard() {
+		if (Build.VERSION.SDK_INT < 11)
+			return;
+		String deviceToken = mPushAgent.getRegistrationId();
+		if (!TextUtils.isEmpty(deviceToken)) {
+			ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+			clipboard.setText(deviceToken);
+			toast("DeviceToken已经复制到剪贴板了");
+		}
+	}
+```
+
+127.圆角背景
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" >
+    <!-- 背景 -->
+    <solid android:color="@color/v_50FFFFFF" />
+    <!-- 边框 -->
+    <stroke
+        android:width="1dp"
+        android:color="@color/v_00FFFFFF" />
+    <!-- 圆角 -->
+    <corners
+        android:bottomLeftRadius="@dimen/_54px"
+        android:bottomRightRadius="@dimen/_54px"
+        android:topLeftRadius="@dimen/_54px"
+        android:topRightRadius="@dimen/_54px" />
+</shape>
+```
+
+128.查看当前Activity的栈情况
+
+adb shell dumpsys activity
+
+
+129.替换换行符
+[\t\n\r]//注意需要选择正则规则选项
+
+130.gif播放:
+````
+使用方法:http://my.oschina.net/u/1175746/blog/288258?p=1#comments
+项目地址:android-gif-drawable
+private GifDrawable drawable;
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);// 设置为全屏
+		GifImageView gifImageView = new GifImageView(mContext);// 得到一个Gif View
+		try {
+			drawable = new GifDrawable(getResources(), R.drawable.start);// 设置需要播放的图片
+			drawable.setLoopCount(1);// 设置播放次数
+			gifImageView.setImageDrawable(drawable);// 把图片设置到Gif View中
+			gifImageView.setScaleType(ScaleType.FIT_XY);// 设置缩放模式
+			setContentView(gifImageView);// 设置View
+		} catch (NotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		findView();
+		initilizeViewAndData();
+		setOnListener();
+	}
+如果Activityfinish了,要记得回收
+drawable.recycle();
+```
+
+131.禁止ViewPager销毁碎片
+```java
+	viewPager.setOffscreenPageLimit(10);//参数表示在当前的界面外最多允许有几个界面
+```
+
+132.自动生成Json解析方法
+```java
+private static String getParseMethod(Class<?> model, int classType,
+			String lastObjectName, String lastJsonUitlName) {
+		String className = (model.getName().contains("$") ? model.getName()
+				.substring(model.getName().indexOf("$") + 1) : model.getName())
+				+ " ";
+		String tmpObjectName = " m" + className;// 变量名
+		String reslut = "";// 结果集
+		String tmpJsonUtil = " m" + className.trim() + "JsonUtil ";// Json变量
+		String tmpJsonArray = " m" + className.trim() + "JsonArray ";// JsonArray变量
+		if (classType == 1) {
+			reslut = "public static " + className + " parseJson(JsonUtil "
+					+ tmpJsonUtil + " )  throws JSONException {" + className
+					+ tmpObjectName + " = new " + className + "();";
+		} else if (classType == 2) {
+			reslut = "\n\n JsonUtil " + tmpJsonUtil + " =" + "new JsonUtil ("
+					+ lastJsonUitlName + ".getString(\""
+					+ className.trim().toLowerCase().substring(0, 1)
+					+ className.trim().substring(1) + "\").toString());"
+					+ className + tmpObjectName + "= new "
+					+ lastObjectName.replace(" m", "") + "().new " + className
+					+ "();";
+		} else if (classType == 3) {
+			reslut = "\n\n  ArrayList<" + className + "> m" + className.trim()
+					+ "List = new ArrayList<"
+					+ lastObjectName.replace(" m", "") + "." + className
+					+ ">(); JSONArray " + tmpJsonArray + " = new JSONArray("
+					+ lastJsonUitlName.trim() + ".getString(\""
+					+ className.trim().toLowerCase().substring(0, 1)
+					+ className.trim().substring(1)
+					+ "\")); for (int i = 0; i < " + tmpJsonArray
+					+ ".length(); i++) { JsonUtil " + tmpJsonUtil + " ="
+					+ "new JsonUtil (" + tmpJsonArray + ".get(i).toString());"
+					+ className + tmpObjectName + "= new "
+					+ lastObjectName.replace(" m", "") + "().new " + className
+					+ "();";
+		}
+		Field[] field = model.getDeclaredFields(); // 获取实体类的所有属性，返回Field数组
+		for (int j = 0; j < field.length; j++) { // 遍历所有属性
+			String type = field[j].getGenericType().toString(); // 获取属性的类型
+			// System.out.println(type + "   " + field[j].getName());
+			if (type.equals("class java.lang.String")) { // 如果type是类类型，则前面包含"class "，后面跟类名
+				reslut += tmpObjectName + "." + field[j].getName() + "="
+						+ tmpJsonUtil + ".getString(\"" + field[j].getName()
+						+ "\");"; // 获取属性的名字
+			} else if (type.equals("class java.lang.Integer")
+					|| type.equals("int")) {
+				reslut += tmpObjectName + "." + field[j].getName() + "="
+						+ tmpJsonUtil + ".getInt(\"" + field[j].getName()
+						+ "\");"; // 获取属性的名字
+			} else if (type.equals("class java.lang.Boolean")
+					|| type.equals("boolean")) {
+				reslut += tmpObjectName + "." + field[j].getName() + "="
+						+ tmpJsonUtil + ".getBoolean(\"" + field[j].getName()
+						+ "\");"; // 获取属性的名字
+			} else if (type.equals("class java.lang.Float")
+					|| type.equals("float")) {
+				reslut += tmpObjectName + "." + field[j].getName() + "="
+						+ tmpJsonUtil + ".getFloat(\"" + field[j].getName()
+						+ "\");"; // 获取属性的名字
+			} else if (type.equals("class java.lang.Double")
+					|| type.equals("double")) {
+				reslut += tmpObjectName + "." + field[j].getName() + "="
+						+ tmpJsonUtil + ".getDouble(\"" + field[j].getName()
+						+ "\");"; // 获取属性的名字
+			} else if (type.equals("class " + className.trim() + "$"
+					+ field[j].getName().toUpperCase().substring(0, 1)
+					+ field[j].getName().substring(1))) {// 如果是一个类
+				reslut += getParseMethod(field[j].getType(), 2, tmpObjectName,
+						tmpJsonUtil);
+			} else if (type.equals("java.util.ArrayList<" + className.trim()
+					+ "$" + field[j].getName().toUpperCase().substring(0, 1)
+					+ field[j].getName().substring(1) + ">")
+					|| type.equals("java.util.List<" + className.trim() + "$"
+							+ field[j].getName().toUpperCase().substring(0, 1)
+							+ field[j].getName().substring(1) + ">")) {
+				try {
+					Class class1 = Class
+							.forName(field[j]
+									.getGenericType()
+									.toString()
+									.substring(
+											field[j].getGenericType()
+													.toString().indexOf("<") + 1)
+									.replace(">", ""));
+					reslut += getParseMethod(class1, 3, tmpObjectName,
+							tmpJsonUtil);
+				} catch (ClassNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		if (classType == 1) {
+			reslut += "return " + tmpObjectName + ";}";
+		} else if (classType == 2) {
+			reslut += lastObjectName.trim() + "."
+					+ className.trim().toLowerCase().substring(0, 1)
+					+ className.trim().substring(1) + " = " + tmpObjectName
+					+ ";\n";
+		} else if (classType == 3) {
+			reslut += "m" + className.trim() + "List.add(" + tmpObjectName
+					+ ");}" + lastObjectName.trim() + "."
+					+ className.trim().toLowerCase().substring(0, 1)
+					+ className.trim().substring(1) + " = " + "m"
+					+ className.trim() + "List" + ";\n";
+		}
+		return reslut;
+	}
+```
+
+133:去除TextView的上下边距
+```java
+includeFontPadding="false"
+```
+
+134:解决ADT大量出现"Unexpected value from nativeGetEnabledTags: 0"的问题
+
+需要过滤其他的字段同样可以这样处理
+
+在logcat的过滤器的log message字段中输入以下过滤串。
+
+^(?!.*(nativeGetEnabledTags)).*$
+
+
+135:沉浸式
+
+android4.4也就是api19~所以我们在res文件夹下新建一个values-v19,然后再新建一个style.xml文件。
+
+在style上写以下代码：
+
+指定style为noactionbar而且半透明
+```xml
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="AppBaseTheme" parent="android:Theme.Holo.Light.NoActionBar.TranslucentDecor" >
+    </style>
+</resources>
+```
+
+然后运行程序可以看到，状态栏与app顶部颜色是一致的，但是如果布局文件的顶部写有其它内容的话会发现布局文件上的内容会与状态栏上的内容重合~~这肯定是不允许的。
+有没有方法解决呢？
+
+在使用了沉浸式状态栏的布局文件上写上以下两句话：
+
+```xmml
+android:clipToPadding="true"
+android:fitsSystemWindows="true"
+```
+
+136.ViewPager滑动事件被item吸收
+
+item设置的内容为 center .并且设置了singleline = "true"
+
+去掉其中一个属性即可
+
+
+137.重启应用
+```java
+@SuppressWarnings("deprecation")
+	private void restart() {
+		Intent intent = new Intent(mContext.getApplicationContext(),
+				TestActivity.class);
+		PendingIntent restartIntent = PendingIntent.getActivity(
+				mContext.getApplicationContext(), 0, intent,
+				Intent.FLAG_ACTIVITY_NEW_TASK);
+		AlarmManager mgr = (AlarmManager) mContext
+				.getSystemService(Context.ALARM_SERVICE);
+		mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 1000,
+				restartIntent); // 1秒钟后重启应用
+		// 退出应用
+		int currentVersion = android.os.Build.VERSION.SDK_INT;
+		if (currentVersion > android.os.Build.VERSION_CODES.ECLAIR_MR1) {
+			Intent startMain = new Intent(Intent.ACTION_MAIN);
+			startMain.addCategory(Intent.CATEGORY_HOME);
+			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			mContext.startActivity(startMain);
+			System.exit(0);
+		} else {// android2.1
+			ActivityManager am = (ActivityManager) mContext
+					.getSystemService(Context.ACTIVITY_SERVICE);
+			am.restartPackage(mContext.getPackageName());
+		}
+	}
+```
+
+138.重命名360打包文件
+```java
+public static void reName(String directoryPath, String startName) {
+		File file = new File(directoryPath);
+		if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			for (int i = 0; i < files.length; i++) {
+				System.out.println(files[i].getParentFile().getPath());
+				files[i].renameTo(new File(
+						files[i].getParentFile().getPath()
+								+ "/"
+								+ files[i]
+										.getName()
+										.replace("com.caiyu.qqsd.encrypted.",
+												startName)
+										.replace("_signed_Aligned", "")
+										.replace("UMENG_CHANNEL.", "")
+										.replace("source", "Web")));
+			}
+		}
+	}
+```
+
+139.代码设置应用名/图标
+
+首先在AndroidManifest.mxl中配置别名
+```xml
+ <activity-alias
+            android:enabled="true"
+            android:label="新的应用名"
+            android:name=".MainActivity-Emblem"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+```
+接着在targetActivity中设置新的应用名和图标
+```
+ private void a(Activity abc) {
+        PackageManager pm = getApplicationContext().getPackageManager();
+        pm.setComponentEnabledSetting(abc.getComponentName(), PackageManager
+                .COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);//设置当前的应用图标不可用
+        pm.setComponentEnabledSetting(new ComponentName(getBaseContext(), getPackageName() + "" +
+                        ".MainActivity-Emblem"), PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);//使用新的文件名和图标
+    }
+```
+
+140.得到文件的md5
+
+可根据文件的md5来判断是否是同一个文件,文件名改变,路径改变不影响其md5值.
+
+hashcode仅仅和文件的路径有关,不能作为文件的唯一标准
+```java
+public static String getMd5ByFile(File file) throws FileNotFoundException {
+        String value = null;
+        FileInputStream in = new FileInputStream(file);
+        try {
+            MappedByteBuffer byteBuffer = in.getChannel().map(FileChannel.MapMode.READ_ONLY, 0,
+                    file.length());
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            md5.update(byteBuffer);
+            BigInteger bi = new BigInteger(1, md5.digest());
+            value = bi.toString(16);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (null != in) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return value;
+    }
+```
+
+141.获得和设置系统音量,设置音量
+```java
+ AudioManager mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        //////////////获得音量//////////////////////
+        //通话音量
+        int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL);
+        int current = mAudioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL);
+        Log.d("VIOCE_CALL", "max: " + max + " current : " + current);
+
+        //系统音量
+        max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_SYSTEM);
+        current = mAudioManager.getStreamVolume(AudioManager.STREAM_SYSTEM);
+        Log.d("SYSTEM", "max : " + max + " current : " + current);
+        //铃声音量
+        max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_RING);
+        current = mAudioManager.getStreamVolume(AudioManager.STREAM_RING);
+        Log.d("RING", "max : " + max + " current : " + current);
+        //音乐音量
+        max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        Log.d("MUSIC", "max : " + max + " current : " + current);
+        //提示声音音量
+        max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_ALARM);
+        current = mAudioManager.getStreamVolume(AudioManager.STREAM_ALARM);
+        Log.d("ALARM", "max : " + max + " current : " + current);
+        //////////////设置音量//////////////////////
+        //        mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 音量大小, 0);
+```
+
+148. 渐变Progress
+```xml
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+<item android:id="@android:id/background">
+    <shape>
+        <corners android:radius="5dip" />
+        <gradient
+                android:startColor="#ff9d9e9d"
+                android:centerColor="#ff5a5d5a"
+                android:centerY="0.75"
+                android:endColor="#ff747674"
+                android:angle="0"
+        />
+    </shape>
+</item>
+
+<item android:id="@android:id/secondaryProgress">
+    <clip>
+        <shape>
+            <corners android:radius="5dip" />
+            <gradient
+                    android:startColor="#80ffd300"
+                    android:centerColor="#80ffb600"
+                    android:centerY="0.75"
+                    android:endColor="#a0ffcb00"
+                    android:angle="0"
+            />
+        </shape>
+    </clip>
+</item>
+<item android:id="@android:id/progress">
+    <clip>
+        <shape>
+            <corners
+                android:radius="5dip" />
+            <gradient
+                android:startColor="#80ff0000"
+                android:endColor="#8000ff00"
+                android:angle="0" />
+        </shape>
+    </clip>
+</item>
+
+</layer-list>
+
+```
+```xml
+<ProgressBar
+    android:id="@+id/progressBar1"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    style="?android:attr/progressBarStyleHorizontal"
+    android:max="100"
+    android:progress="80"
+    android:secondaryProgress="90"
+    android:progressDrawable="@drawable/progress_bar"
+    />
 ```
