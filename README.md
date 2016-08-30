@@ -2352,3 +2352,13 @@ public static String getMd5ByFile(File file) throws FileNotFoundException {
     android:progressDrawable="@drawable/progress_bar"
     />
 ```
+
+
+149.获取键盘高度
+
+键盘的高度不可以直接获取,可以通过监听键盘弹出的变化.获取当前窗体的高度变化来计算出键盘的高度
+```java
+    Rect r = new Rect();
+                    View rootview = MainActivity.this.getWindow().getDecorView(); // this = activity
+                    rootview.getWindowVisibleDisplayFrame(r);
+```
