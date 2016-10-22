@@ -2362,3 +2362,36 @@ public static String getMd5ByFile(File file) throws FileNotFoundException {
                     View rootview = MainActivity.this.getWindow().getDecorView(); // this = activity
                     rootview.getWindowVisibleDisplayFrame(r);
 ```
+
+150.Activity Dialog有白色背景,白色边框,设置为透明背景,圆角
+```xml
+<style name="activity_dialog" parent="@android:style/Theme.Dialog">
+
+        <!-- 窗口边框 -->
+        <item name="android:windowFrame">@null</item>
+        <!-- 窗口是否浮动在Activity上 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 半透明 -->
+        <item name="android:windowIsTranslucent">false</item>
+        <!-- 没有标题栏 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 背景 -->
+        <!--<item name="android:background">@android:color/white</item>-->
+        <item name="android:windowBackground">@color/_00000000</item>
+
+        <!-- 背景模糊 -->
+        <item name="android:backgroundDimEnabled">true</item>
+
+        <!--禁止点击屏幕之外关闭Dialog-->
+        <item name="android:windowCloseOnTouchOutside">false</item>
+    </style>
+```
+```java
+假设Activity的布局设置了背景,不管是什么颜色,包括透明,成为Dialog后都会自动添加一个白色的背景,
+导致无法有白色的边框,或b无法显示圆角问题
+需要用代码重新把Dialog的背景重新设置为透明
+ getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+```
+
+
+151.
