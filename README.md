@@ -2394,4 +2394,14 @@ public static String getMd5ByFile(File file) throws FileNotFoundException {
 ```
 
 
-151.
+151.监听主线程是否完成了绘制
+```java
+Looper.myQueue().addIdleHandler(idleHandler = new MessageQueue.IdleHandler() {
+            @Override
+            public boolean queueIdle() {
+                Log.e("siyehua", "onCreate -> idle : " + (SystemClock.uptimeMillis() - time));
+                handler.sendEmptyMessageDelayed(a++, 1500);
+                return false;
+            }
+        });
+```
