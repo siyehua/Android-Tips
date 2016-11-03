@@ -2405,3 +2405,22 @@ Looper.myQueue().addIdleHandler(idleHandler = new MessageQueue.IdleHandler() {
             }
         });
 ```
+
+
+152.Retofit添加统一head
+```java
+HttpLoggingInterceptor httpLoggingInterceptor = new HttpLoggingInterceptor(new HttpLoggingInterceptor.Logger() {
+	 @Override
+ 	public void log(String message) {
+ 		Log.i("RestLogging", message);
+ 	}
+});
+httpLoggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+OkHttpClient client = new OkHttpClient.Builder()
+ .addInterceptor(httpLoggingInterceptor)
+ .addNetworkInterceptor(commonParamsInterceptor)
+ .retryOnConnectionFailure(true)
+ .connectTimeout(15, TimeUnit.SECONDS)
+ .build();
+return client;
+```
