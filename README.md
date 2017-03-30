@@ -2424,3 +2424,61 @@ OkHttpClient client = new OkHttpClient.Builder()
  .build();
 return client;
 ```
+
+153. 系统状态栏各种标志介绍
+```java
+if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        }
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.siyehua_activity_main);
+        int[] options = new int[]{
+                /**
+                 * 默认,假设要清楚其他的标志,可以使用这个默认标志
+                */
+                View.SYSTEM_UI_FLAG_VISIBLE,
+                /**
+                 * 这种模式下状态栏除了时间和电量,其他的信息,如网络状态,通知栏图标等会被隐藏
+                */
+                View.SYSTEM_UI_FLAG_LOW_PROFILE,
+                /**
+                 * 暂时隐藏导航栏(注意导航栏包裹底部系统导航,和头部状态栏),点击一下即重新重现,
+                 * 一般和SYSTEM_UI_FLAG_LOW_PROFILE配套使用
+                 * 这个标志有一个局限性,因为特别重要所以用户点一下屏幕会立即重新出现,所以叫暂时隐藏
+                */
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION,
+                /**
+                 * 全屏
+                */
+                View.SYSTEM_UI_FLAG_FULLSCREEN,
+                /**
+                 * 文档介绍说假设和SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN配合使用,将转换为 SYSTEM_UI_FLAG_FULLSCREEN,
+                 * 在7.0下效果并非如此
+                */
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE,
+                /**
+                 * 隐藏导航栏和状态栏(实际上状态栏会至于Layout上面)
+                */
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION,
+                /**
+                 *
+                 * 全屏状态(除了状态栏),这个是最佳的全屏模式
+                 * 如果使用了ActionBar,也会被隐藏
+                 *
+                */
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN,
+                /**
+                 * 配合SYSTEM_UI_FLAG_HIDE_NAVIGATION使用
+                 *前面一个标志点击一下系统导航栏会立即出现,设置了这个要用户手动移动到底部并向上滑动才会出现
+                */
+                View.SYSTEM_UI_FLAG_IMMERSIVE,
+                /**
+                 * 配合SYSTEM_UI_FLAG_HIDE_NAVIGATION, SYSTEM_UI_FLAG_FULLSCREEN使用
+                 * 与SYSTEM_UI_FLAG_IMMERSIVE比较,这个更加严格,哪怕出现了也是半透明的
+                */
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY,
+        };
+```
+
+154. 
